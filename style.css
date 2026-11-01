@@ -1,0 +1,18 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #bcd6ea; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+#app canvas { display: block; }
+#hud { position: fixed; top: 12px; left: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
+#hud .title { font-weight: 700; font-size: 20px; letter-spacing: .5px; display: flex; align-items: center; gap: 8px; }
+#hud .title small { font-weight: 400; font-size: 12px; opacity: .85; }
+#hud .tri { width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 15px solid #e2231a; display: inline-block; }
+#near { margin-top: 6px; font-size: 14px; background: rgba(20,20,20,.45); padding: 4px 10px; border-radius: 6px; display: inline-block; }
+#help { position: fixed; left: 12px; bottom: 12px; color: #fff; font-size: 12px; line-height: 1.6; background: rgba(20,20,20,.5); padding: 8px 12px; border-radius: 8px; pointer-events: none; }
+#minimap { position: fixed; right: 12px; top: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,.8); box-shadow: 0 2px 10px rgba(0,0,0,.35); background: #333; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: #1d1d1f; color: #eee; font-size: 18px; z-index: 10; transition: opacity .5s; }
+.label { color: #fff; font-size: 12px; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.9); white-space: nowrap; pointer-events: none; line-height: 1.2; }
+.label b { display: block; font-size: 14px; }
+.label span { opacity: .85; font-size: 11px; }
+.far .label span { display: none; }
+.far .label b { font-size: 12px; }
+.label.low b::after { content: " ?"; color: #ffd27a; }
+@media (max-width: 600px) { #minimap { width: 120px; height: 180px; } #help { font-size: 10px; } }

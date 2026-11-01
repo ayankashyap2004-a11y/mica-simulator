@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MICA Campus Map</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="hud">
+    <div class="title"><span class="tri"></span>MICA <small>campus map · v0.2</small></div>
+    <div id="near">Main Gate</div>
+  </div>
+  <div id="help">
+    <b>WASD</b> move · <b>Shift</b> run · <b>Space</b> jump · <b>drag</b> look · <b>wheel</b> zoom<br />
+    <b>L</b> labels · <b>M</b> satellite ground · <b>T</b> time of day · <b>O</b> ambient occlusion · <b>V</b> overview · <b>H</b> hide help
+  </div>
+  <canvas id="minimap" width="180" height="270"></canvas>
+  <div id="loading">Building campus…</div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
