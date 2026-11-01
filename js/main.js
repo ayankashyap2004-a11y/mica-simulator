@@ -9,13 +9,14 @@ import * as L from './layout.js';
 import { TREES, GROADS } from './geodata.js';
 import { M, toW, toPx, rand, rr, cnv, tex, initMaterials, MAT, prism, Frame, colliders, flushBatches, openings } from './kit.js';
 import { buildAll } from './arch.js';
+import { initIntro } from './intro.js';
 
 const [IW, IH] = L.IMG_SIZE;
 
 // ---------------------------------------------------------------- renderer / scene
 const app = document.getElementById('app');
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -28,6 +29,13 @@ app.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.25, 4000);
+// loading screen progress: each stage yields so the bar and caption repaint between heavy build steps
+const ldFill = document.getElementById('ld-fill'), ldStage = document.getElementById('ld-stage'), ldPct = document.getElementById('ld-pct');
+async function stage(text, pct) {
+  ldStage.textContent = text; ldFill.style.transform = `scaleX(${pct / 100})`; ldPct.textContent = `${Math.round(pct)}%`;
+  await new Promise(r => setTimeout(r, 30));
+}
+await stage('Mixing brick & concrete textures', 8);
 initMaterials(renderer);
 
 // physical sky + image-based lighting from it
@@ -37,7 +45,7 @@ Object.assign(skyU.turbidity, { value: 6 }); Object.assign(skyU.rayleigh, { valu
 const pmrem = new THREE.PMREMGenerator(renderer);
 const hemi = new THREE.HemisphereLight(0xdfeeff, 0x6f6146, 0.35); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 3);
-sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -80, right: 80, top: 80, bottom: -80, near: 1, far: 500 });
 sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05;
 scene.add(sun, sun.target);
@@ -60,7 +68,9 @@ function applyTime() {
 applyTime();
 
 // ---------------------------------------------------------------- buildings
+await stage('Raising hostels & academic blocks', 18);
 const extras = buildAll(scene);
+await stage('Building the boundary wall & main gate', 42);
 const footprints = extras.footprints;
 
 // boundary wall + gate
@@ -75,7 +85,8 @@ function wall(a, b, h, t, side) {
 }
 for (let i = 0; i < L.BOUNDARY.length; i++) {
   const a = L.BOUNDARY[i], b = L.BOUNDARY[(i + 1) % L.BOUNDARY.length];
-  const isGate = a === L.GATE.a && b === L.GATE.b;
+  const same = (p, q) => p[0] === q[0] && p[1] === q[1];                       // compare coordinates, not array identity
+  const isGate = same(a, L.GATE.a) && same(b, L.GATE.b);
   const segs = isGate ? (() => { const len = Math.hypot(b[0] - a[0], b[1] - a[1]), gw = L.GATE.width / M / 2 / len; return [[a, lerp2(a, b, L.GATE.at - gw)], [lerp2(a, b, L.GATE.at + gw), b]]; })() : [[a, b]];
   for (const [p, q] of segs) wall(toW(...p), toW(...q), 2.1, 0.25, 'brick');
 }
@@ -83,13 +94,48 @@ const gateMid = lerp2(L.GATE.a, L.GATE.b, L.GATE.at);
 {
   const { a, b, at, width } = L.GATE, len = Math.hypot(b[0] - a[0], b[1] - a[1]), gw = width / M / 2 / len;
   for (const t of [at - gw, at + gw]) { const F = new Frame(...lerp2(a, b, t), 0); F.box(-0.7, -0.7, 0.7, 0.7, 0, 2.9, 'brick', 'concrete', { collide: true }); F.box(-0.85, -0.85, 0.85, 0.85, 2.9, 3.1, 'concrete'); }
-  const F = new Frame(...lerp2(a, b, at + gw + 0.08), 0); F.box(0.3, -3, 0.42, 3, 0, 1.8, 'red');      // red gate leaf slid open
   const S = new Frame(...lerp2(a, b, at - gw - 0.05), 0); S.box(1.5, -1.6, 4.5, 1.6, 0, 2.8, 'plaster', 'roofWhite', { collide: true });  // security office
   openings(S, 4.5, -1.6, 4.5, 1.6, 0, 'tall', { margin: 0.5, dims: [1.6, 1.1, 1.0], chajja: true });
   const [lx, lz] = toW(...gateMid); extras.labels.push({ name: 'Main Gate', sub: 'Security office · Telav–Ghuma Rd', x: lx, y: 5, z: lz });
 }
+// swinging main gate: two red barred leaves hinged on the brick pillars, swing into campus
+const gate = { target: 0, value: 0, leaves: [], blocker: null, mid: toW(...gateMid) };
+{
+  const { a, b, at, width } = L.GATE, len = Math.hypot(b[0] - a[0], b[1] - a[1]), gw = width / M / 2 / len;
+  const P1 = toW(...lerp2(a, b, at - gw)), P2 = toW(...lerp2(a, b, at + gw));
+  const dx = P2[0] - P1[0], dz = P2[1] - P1[1], D = Math.hypot(dx, dz), ux = dx / D, uz = dz / D, leafLen = D / 2 - 0.78;
+  const inside = [1, 0];                                                       // campus lies east (+x) of the gate line
+  const red = new THREE.MeshStandardMaterial({ color: 0xb8221b, roughness: 0.45, metalness: 0.55, envMapIntensity: 0.8 });
+  const bar = (w, h, d, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), red); m.position.set(x, y, z); m.castShadow = true; return m; };
+  for (const [P, sgn] of [[P1, 1], [P2, -1]]) {
+    const pivot = new THREE.Group(), leaf = new THREE.Group();
+    pivot.position.set(P[0] + ux * sgn * 0.74, 0, P[1] + uz * sgn * 0.74);
+    leaf.add(bar(leafLen, 0.08, 0.08, leafLen / 2, 0.15, 0), bar(leafLen, 0.08, 0.08, leafLen / 2, 1.85, 0), bar(leafLen, 0.05, 0.05, leafLen / 2, 1.0, 0));
+    leaf.add(bar(0.09, 1.8, 0.09, 0.05, 1.0, 0), bar(0.09, 1.8, 0.09, leafLen - 0.05, 1.0, 0));
+    for (let x = 0.2; x < leafLen - 0.1; x += 0.16) leaf.add(bar(0.025, 1.7, 0.025, x, 1.0, 0));
+    for (let x = 0.2; x < leafLen - 0.1; x += 0.16) leaf.add(bar(0.05, 0.12, 0.05, x, 1.95, 0));   // spear tips
+    pivot.add(leaf); scene.add(pivot);
+    const base = Math.atan2(-uz * sgn, ux * sgn);                              // local +x points across the opening
+    const tip = th => [Math.cos(th), -Math.sin(th)];
+    const open = [base + 1.75, base - 1.75].find(th => tip(th)[0] * inside[0] + tip(th)[1] * inside[1] > 0);
+    gate.leaves.push({ pivot, base, open });
+  }
+  const nx = -uz * 0.15, nz = ux * 0.15;
+  gate.blocker = [[P1[0] + nx, P1[1] + nz], [P2[0] + nx, P2[1] + nz], [P2[0] - nx, P2[1] - nz], [P1[0] - nx, P1[1] - nz]];
+  colliders.push(gate.blocker);
+}
+// auto = gameplay proximity trigger (open within 6 m, close beyond 8.5 m); the cutscene drives gate.target itself
+function updateGate(dt, auto) {
+  if (auto) { const d = Math.hypot(player.position.x - gate.mid[0], player.position.z - gate.mid[1]); if (d < 6) gate.target = 1; else if (d > 8.5) gate.target = 0; }
+  gate.value += Math.sign(gate.target - gate.value) * Math.min(Math.abs(gate.target - gate.value), dt * 0.55);
+  const e = gate.value * gate.value * (3 - 2 * gate.value);                   // smoothstep: gentle start and stop
+  for (const l of gate.leaves) l.pivot.rotation.y = l.base + (l.open - l.base) * e;
+  const i = colliders.indexOf(gate.blocker);
+  if (gate.value < 0.15 && i < 0) colliders.push(gate.blocker); else if (gate.value >= 0.15 && i >= 0) colliders.splice(i, 1);
+}
 const buildingMeshes = flushBatches(scene);
 
+await stage('Laying roads, lawns & red pavers', 52);
 // ---------------------------------------------------------------- ground (stylised, drawn in image px)
 const satImg = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = 'assets/satellite_z19.jpg'; });
 const inside = new Path2D(); L.BOUNDARY.forEach((p, i) => i ? inside.lineTo(...p) : inside.moveTo(...p)); inside.closePath();
@@ -158,10 +204,15 @@ groundMat.onBeforeCompile = sh => {
 {
   const g = new THREE.Mesh(new THREE.PlaneGeometry(IW * M, IH * M), groundMat);
   g.rotation.x = -Math.PI / 2; const [cx, cz] = toW(IW / 2, IH / 2); g.position.set(cx, 0, cz); g.receiveShadow = true; scene.add(g);
-  const outer = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.MeshStandardMaterial({ color: 0xb09872, roughness: 1 }));
-  outer.rotation.x = -Math.PI / 2; outer.position.set(cx, -1.5, cz); scene.add(outer);
+  // farmland around the satellite tile: four flat planes framing it at ground level (no overlap, no z-fighting)
+  const outerMat = new THREE.MeshStandardMaterial({ color: 0xb09872, roughness: 1 });
+  const gw = IW * M, gh = IH * M, E = 3000;
+  for (const [w, h, ox, oz] of [[gw + 2 * E, E, 0, -(gh + E) / 2], [gw + 2 * E, E, 0, (gh + E) / 2], [E, gh, -(gw + E) / 2, 0], [E, gh, (gw + E) / 2, 0]]) {
+    const o = new THREE.Mesh(new THREE.PlaneGeometry(w, h), outerMat); o.rotation.x = -Math.PI / 2; o.position.set(cx + ox, 0, cz + oz); o.receiveShadow = true; scene.add(o);
+  }
 }
 
+await stage('Planting neem trees & bougainvillea', 68);
 // ---------------------------------------------------------------- trees (positions detected from the satellite canopy)
 const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), eu = new THREE.Euler();
 {
@@ -182,7 +233,7 @@ const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vecto
   { const cols = [], pos = trunkG.attributes.position; for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); const c = new THREE.Color(y < 0.22 ? 0xc4502e : 0x5a4636); cols.push(c.r, c.g, c.b); } trunkG.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); }
   const trunks = new THREE.InstancedMesh(trunkG, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }), n);
   // lumpy canopy: jittered icosphere with darker underside
-  const crownG = new THREE.IcosahedronGeometry(1, 2);
+  const crownG = new THREE.IcosahedronGeometry(1, 1);
   { const pos = crownG.attributes.position, cols = [], seen = new Map();
     for (let i = 0; i < pos.count; i++) { const k = `${pos.getX(i).toFixed(3)},${pos.getY(i).toFixed(3)},${pos.getZ(i).toFixed(3)}`; let j = seen.get(k); if (j === undefined) { j = 0.82 + rand() * 0.32; seen.set(k, j); } pos.setXYZ(i, pos.getX(i) * j, pos.getY(i) * j, pos.getZ(i) * j); const sh = 0.55 + 0.45 * (pos.getY(i) * 0.5 + 0.5); cols.push(sh, sh, sh); }
     crownG.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); crownG.computeVertexNormals(); }
@@ -193,17 +244,17 @@ const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vecto
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
       .replace('void main() {', 'void main() {\n float cd = distance(vWPos, cameraPosition);\n if (cd < 9.0) { float th = (cd - 3.0) / 6.0; if (fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898,78.233))) * 43758.5453) > th) discard; }');
   };
-  const crowns = new THREE.InstancedMesh(crownG, crownM, n * 3);
+  const crowns = new THREE.InstancedMesh(crownG, crownM, n * 2);
   const greens = [0x3f6d30, 0x4b7b36, 0x335c2a, 0x5c8b3d, 0x6a8f3f, 0x2f5427, 0x7a9440].map(c => new THREE.Color(c));
   pts.forEach(([px, py, k], i) => {
     const [x, z] = toW(px, py), th = rr(2.6, 4.6) * k;
     m4.compose(pv.set(x, 0, z), q.identity(), sv.set(k, th, k)); trunks.setMatrixAt(i, m4);
     const r = rr(2.4, 3.9) * k, col = greens[(rand() * greens.length) | 0];
-    for (let j = 0; j < 3; j++) {
+    for (let j = 0; j < 2; j++) {
       eu.set(rand() * 3, rand() * 3, rand() * 3); q.setFromEuler(eu);
       const off = j ? [rr(-1.6, 1.6), rr(-0.6, 0.8), rr(-1.6, 1.6)] : [0, 0, 0], rj = j ? r * rr(0.55, 0.75) : r;
       m4.compose(pv.set(x + off[0] * k, th + rj * 0.4 + off[1], z + off[2] * k), q, sv.set(rj, rj * 0.7, rj));
-      crowns.setMatrixAt(i * 3 + j, m4); crowns.setColorAt(i * 3 + j, col.clone().offsetHSL(rr(-0.02, 0.02), 0, rr(-0.05, 0.05)));
+      crowns.setMatrixAt(i * 2 + j, m4); crowns.setColorAt(i * 2 + j, col.clone().offsetHSL(rr(-0.02, 0.02), 0, rr(-0.05, 0.05)));
     }
   });
   trunks.castShadow = crowns.castShadow = true; crowns.receiveShadow = true;
@@ -218,7 +269,10 @@ const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vecto
     let x = a[0] + (b[0] - a[0]) * t, z = a[1] + (b[1] - a[1]) * t; const dl = Math.hypot(x - cx, z - cz) || 1; x += (x - cx) / dl * 1.6; z += (z - cz) / dl * 1.6;
     bushes.push([x, z, rr(0.9, 1.7)]);
   }
-  for (let k = 0; k < 16; k++) { const [x, z] = toW(...lerp2(L.GATE.a, L.GATE.b, rr(-0.3, 1.2))); bushes.push([x + rr(0.6, 1.5), z, rr(1.1, 2)]); }
+  { // bougainvillea along the wall either side of the gate, never in the gateway itself
+    const len = Math.hypot(L.GATE.b[0] - L.GATE.a[0], L.GATE.b[1] - L.GATE.a[1]), gw = L.GATE.width / M / 2 / len + 0.06;
+    for (let k = 0; k < 16; k++) { let t = rr(-0.3, 1.2); if (Math.abs(t - L.GATE.at) < gw) t = L.GATE.at + Math.sign(t - L.GATE.at || 1) * (gw + rr(0, 0.15)); const [x, z] = toW(...lerp2(L.GATE.a, L.GATE.b, t)); bushes.push([x + rr(0.6, 1.5), z, rr(1.1, 2)]); }
+  }
   const bm = new THREE.InstancedMesh(crownG, new THREE.MeshStandardMaterial({ roughness: 0.9, flatShading: true, vertexColors: true }), bushes.length);
   bushes.forEach(([x, z, r], i) => { m4.compose(pv.set(x, r * 0.7, z), q.identity(), sv.set(r, r * 0.85, r)); bm.setMatrixAt(i, m4); bm.setColorAt(i, bcols[(rand() * bcols.length) | 0]); });
   bm.castShadow = true; scene.add(bm);
@@ -234,6 +288,7 @@ for (const l of extras.labels) {
   labelAnchors.push({ name: l.name, x: l.x, z: l.z, el: d, obj: o });
 }
 
+await stage('Painting signboards & marking courts', 82);
 // ---------------------------------------------------------------- sports + props
 function addMesh(geo, material, x, y, z, ry = 0) { const m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; scene.add(m); return m; }
 const fenceMat = new THREE.MeshStandardMaterial({ color: 0x2f6e46, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false });
@@ -325,6 +380,7 @@ function addTextLabel(name, sub, x, z, y) {
   const o = new CSS2DObject(d); o.position.set(x, y, z); labelGroup.add(o); labelAnchors.push({ name, x, z, el: d, obj: o });
 }
 
+await stage('Parking your car on Telav–Ghuma Road', 92);
 // ---------------------------------------------------------------- player
 const player = new THREE.Group(); scene.add(player);
 const P = { vel: new THREE.Vector3(), yaw: 0, onGround: true, walk: 0 };
@@ -411,8 +467,18 @@ function drawMinimap() {
 // ---------------------------------------------------------------- loop
 const clock = new THREE.Clock(), nearEl = document.getElementById('near'), ray = new THREE.Raycaster(), tmp = new THREE.Vector3(), camTarget = new THREE.Vector3();
 let mmTimer = 0;
+const intro = initIntro({ scene, camera, player, body, P, cam, labelGroup, colliders, gate, setTime: i => { if (timeIdx !== i) { timeIdx = i; applyTime(); } } });
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.05);
+  updateGate(dt, intro.state === 'play');
+  if (intro.state !== 'play') {                 // title screen / cutscene own the camera
+    const f = intro.update(dt);
+    if (f) { Object.assign(sun.shadow.camera, { left: -90, right: 90, top: 90, bottom: -90 }); sun.shadow.camera.updateProjectionMatrix(); sun.position.copy(f).addScaledVector(sunDir, 300); sun.target.position.copy(f); }
+    if (useAO && camera.position.y < 40) composer.render(); else renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+    requestAnimationFrame(tick);
+    return;
+  }
   const fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
   const str = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
   const speed = keys.ShiftLeft || keys.ShiftRight ? 7 : 2.8;
@@ -459,6 +525,9 @@ function tick() {
   requestAnimationFrame(tick);
 }
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); labelRenderer.setSize(innerWidth, innerHeight); });
-const ld = document.getElementById('loading'); ld.style.opacity = 0; setTimeout(() => ld.remove(), 600);
-window.__mica = { player, cam, colliders, scene, renderer, toW };
+// loading done: the overlay swaps its loader for "Click to start" and reveals the orbiting campus behind it
+await stage('Campus ready', 100);
+await new Promise(r => setTimeout(r, 350));       // let the bar visibly reach 100%
+intro.showTitle();
+window.__mica = { player, cam, colliders, scene, renderer, toW, intro, camera, gate };
 tick();

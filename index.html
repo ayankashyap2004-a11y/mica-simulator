@@ -3,21 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MICA Campus Map</title>
+  <title>MICA Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,600;62..125,800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script type="importmap">
     {
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
       }
     }
   </script>
 </head>
-<body>
+<body class="cine">
   <div id="app"></div>
+
+  <!-- gameplay HUD -->
   <div id="hud">
-    <div class="title"><span class="tri"></span>MICA <small>campus map · v0.2</small></div>
+    <div class="title"><span class="tri"></span>MICA <small>simulator · v0.3</small></div>
     <div id="near">Main Gate</div>
   </div>
   <div id="help">
@@ -25,7 +31,49 @@
     <b>L</b> labels · <b>M</b> satellite ground · <b>T</b> time of day · <b>O</b> ambient occlusion · <b>V</b> overview · <b>H</b> hide help
   </div>
   <canvas id="minimap" width="180" height="270"></canvas>
-  <div id="loading">Building campus…</div>
+
+  <!-- MICA Simulator overlay: loads the campus, then "Click to start" (live 3D campus orbit fades in behind it) -->
+  <div id="title-screen" class="loading">
+    <div class="ts-inner">
+      <div class="ts-kicker">The School of Ideas · Shela, Ahmedabad</div>
+      <h1 class="ts-title"><span class="ts-tri"></span><span class="w">M</span><span class="w">I</span><span class="w">C</span><span class="w">A</span></h1>
+      <div class="ts-sub"><span class="w2">Simulator</span></div>
+      <div class="ts-loader">
+        <div class="ld-bar"><i id="ld-fill"></i></div>
+        <div class="ld-row"><span id="ld-stage">Loading the engine</span><span id="ld-pct">0%</span></div>
+        <div id="ld-tip"></div>
+      </div>
+      <div class="ts-menu">
+        <button id="btn-start" class="primary">Click to start</button>
+        <button id="btn-controls">Controls</button>
+      </div>
+      <div id="controls-card">
+        <div><b>WASD</b> walk</div><div><b>Shift</b> run</div><div><b>Space</b> jump</div><div><b>Drag</b> look around</div>
+        <div><b>Wheel</b> zoom</div><div><b>V</b> overview</div><div><b>M</b> satellite ground</div><div><b>Esc</b> skip cutscene</div>
+      </div>
+      <div class="ts-foot">22.9987° N · 72.4421° E — campus traced from satellite imagery &amp; the architect's building schedule</div>
+    </div>
+  </div>
+
+  <!-- cutscene overlays -->
+  <div id="letterbox"><div class="lb top"></div><div class="lb bot"></div></div>
+  <div id="lower-third"><div class="bar"></div><b>Telav–Ghuma Road</b><span>Shela, Ahmedabad · Day 1, 7:40 AM</span></div>
+  <div id="welcome"><span class="w">Welcome</span> <span class="w">to</span> <span class="w red">MICA</span></div>
+  <button id="skip">Skip <kbd>Esc</kbd></button>
+  <div id="fader"></div>
+  <script>
+    // campus facts (architect's building schedule + Ayan's notes), rotating while the campus builds
+    (() => {
+      const tips = ['KEIC, the library, seats 156 readers.', 'The Mess seats 550. Table tennis and carrom are on its 2nd floor.',
+        'Ashoka is the only G+4 hostel on campus.', 'Shishya Gramah: the SOAC / CCC hutments between Silver Oak and Chota Canteen.',
+        'The Open Air Theatre seats 300.', 'Chinar and Gulmohar face each other across the road from Amaltas to Silver Oak.',
+        'Kachnar, Palaash and Parijat ring the open badminton court.', 'The gym is on the Mess ground floor, with its own entrance.'];
+      let i = Math.floor(Math.random() * tips.length); const el = document.getElementById('ld-tip');
+      const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = 'Did you know? ' + tips[i++ % tips.length]; el.style.opacity = 0.75; }, 300); };
+      show(); const iv = setInterval(() => { if (!document.getElementById('title-screen').classList.contains('loading')) return clearInterval(iv); show(); }, 3200);
+    })();
+  </script>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

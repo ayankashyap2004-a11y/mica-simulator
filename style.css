@@ -8,7 +8,60 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #bcd6ea; fon
 #near { margin-top: 6px; font-size: 14px; background: rgba(20,20,20,.45); padding: 4px 10px; border-radius: 6px; display: inline-block; }
 #help { position: fixed; left: 12px; bottom: 12px; color: #fff; font-size: 12px; line-height: 1.6; background: rgba(20,20,20,.5); padding: 8px 12px; border-radius: 8px; pointer-events: none; }
 #minimap { position: fixed; right: 12px; top: 12px; border-radius: 8px; border: 2px solid rgba(255,255,255,.8); box-shadow: 0 2px 10px rgba(0,0,0,.35); background: #333; }
-#loading { position: fixed; inset: 0; display: grid; place-items: center; background: #1d1d1f; color: #eee; font-size: 18px; z-index: 10; transition: opacity .5s; }
+/* loader lives inside the title overlay */
+.ts-loader { margin-top: 40px; width: min(440px, 80vw); transition: opacity .4s, transform .4s; }
+.ld-bar { height: 4px; background: rgba(255,255,255,.14); border-radius: 4px; overflow: hidden; }
+.ld-bar i { display: block; height: 100%; background: #e2231a; transform: scaleX(0); transform-origin: left; transition: transform .45s cubic-bezier(.2,.8,.2,1); box-shadow: 0 0 12px rgba(226,35,26,.6); }
+.ld-row { margin-top: 12px; display: flex; justify-content: space-between; font-size: 13px; letter-spacing: .06em; opacity: .85; }
+#ld-pct { font-variant-numeric: tabular-nums; }
+#ld-tip { margin-top: 18px; min-height: 36px; font-size: 13px; line-height: 1.45; opacity: .75; transition: opacity .3s; color: #e6d8c3; }
+#title-screen:not(.loading) .ts-loader { display: none; }
+#title-screen.loading .ts-menu { display: none; }
+@keyframes whip { 0% { opacity: 0; transform: translateY(var(--from, 60px)); } 0.1% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+@keyframes pop { 0% { opacity: 0; transform: scale(.4) rotate(-30deg); } 0.1% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes pulse { 50% { box-shadow: 0 10px 30px rgba(226,35,26,.35), 0 0 0 10px rgba(226,35,26,.12); } }
+
+/* ---------------- cinematic states ---------------- */
+body.cine #hud, body.cine #help, body.cine #minimap { opacity: 0; pointer-events: none; }
+body.cine .label { display: none; }
+:root { --red: #e2231a; --ink: #f6f3ec; }
+
+#title-screen { position: fixed; inset: 0; z-index: 20; transition: background .9s ease; color: var(--ink); font-family: Archivo, system-ui, sans-serif;
+  background: linear-gradient(90deg, rgba(10,8,6,.82) 0%, rgba(10,8,6,.55) 38%, rgba(10,8,6,0) 70%), linear-gradient(0deg, rgba(10,8,6,.5), rgba(10,8,6,0) 35%); }
+.ts-inner { position: absolute; left: clamp(20px, 7vw, 120px); top: 50%; transform: translateY(-50%); max-width: 640px; }
+.ts-kicker { font-weight: 600; font-size: 13px; letter-spacing: .22em; text-transform: uppercase; opacity: 0; color: #e8d9c2; }
+.ts-title { margin: 14px 0 0; display: flex; align-items: flex-end; gap: .02em; font-weight: 800; font-stretch: 112%; font-size: clamp(88px, 15vw, 200px); line-height: .82; letter-spacing: -.02em; }
+.ts-title .w { display: inline-block; opacity: 0; }
+.ts-tri { display: inline-block; width: 0; height: 0; margin-right: .12em; margin-bottom: .08em; border-left: .3em solid transparent; border-right: .3em solid transparent; border-bottom: .52em solid var(--red); opacity: 0; font-size: inherit; }
+.ts-sub { margin-top: 14px; font-weight: 400; font-stretch: 88%; font-size: clamp(20px, 2.6vw, 30px); letter-spacing: .32em; text-transform: uppercase; }
+.ts-sub .w2 { display: inline-block; opacity: 0; }
+.ts-menu { margin-top: 44px; display: flex; gap: 12px; flex-wrap: wrap; }
+.ts-menu button { font: 600 15px/1 Archivo, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.35); padding: 16px 24px; border-radius: 999px; cursor: pointer; opacity: 0; transition: background .2s, transform .2s, border-color .2s; backdrop-filter: blur(6px); }
+.ts-menu button:hover { background: rgba(255,255,255,.16); transform: translateY(-2px); }
+.ts-menu button.primary { background: var(--red); border-color: var(--red); box-shadow: 0 10px 30px rgba(226,35,26,.35); }
+.ts-menu button.primary:hover { background: #f02c22; }
+.ts-menu kbd, #skip kbd { font: 600 10px/1 Archivo, sans-serif; padding: 4px 6px; margin-left: 10px; border-radius: 4px; background: rgba(0,0,0,.25); letter-spacing: .05em; }
+#controls-card { margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(140px, 1fr)); gap: 6px 24px; font-size: 13px; color: #e8dfd0; max-height: 0; overflow: hidden; transition: max-height .4s ease, opacity .3s; opacity: 0; }
+#controls-card.open { max-height: 200px; opacity: 1; }
+#controls-card b { color: #fff; display: inline-block; min-width: 54px; }
+.ts-foot { margin-top: 40px; font-size: 11px; letter-spacing: .08em; opacity: 0; color: #d9cbb4; }
+
+#letterbox .lb { position: fixed; left: 0; right: 0; height: 11vh; background: #000; z-index: 15; transform: scaleY(0); pointer-events: none; }
+#letterbox .top { top: 0; transform-origin: top; }
+#letterbox .bot { bottom: 0; transform-origin: bottom; }
+#lower-third { position: fixed; left: clamp(20px, 6vw, 90px); bottom: calc(11vh + 28px); z-index: 16; color: #fff; font-family: Archivo, system-ui, sans-serif; visibility: hidden; opacity: 0; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+#lower-third .bar { width: 64px; height: 4px; background: var(--red); margin-bottom: 12px; transform-origin: left; }
+#lower-third b { display: block; font-weight: 800; font-stretch: 110%; font-size: clamp(26px, 3.4vw, 44px); letter-spacing: -.01em; }
+#lower-third span { display: block; margin-top: 6px; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; opacity: .9; }
+#welcome { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; gap: .3em; z-index: 16; visibility: hidden; opacity: 0; pointer-events: none;
+  font: 800 clamp(40px, 7vw, 96px)/1 Archivo, system-ui, sans-serif; font-stretch: 112%; color: #fff; text-shadow: 0 4px 30px rgba(0,0,0,.45); letter-spacing: -.01em; }
+#welcome .w { display: inline-block; }
+#welcome .red { color: var(--red); }
+#skip { position: fixed; right: 24px; bottom: calc(11vh + 20px); z-index: 17; visibility: hidden; opacity: 0; font: 600 13px/1 Archivo, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase;
+  color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 10px 16px; cursor: pointer; }
+#fader { position: fixed; inset: 0; background: #000; z-index: 30; visibility: hidden; opacity: 0; pointer-events: none; }
 .label { color: #fff; font-size: 12px; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.9); white-space: nowrap; pointer-events: none; line-height: 1.2; }
 .label b { display: block; font-size: 14px; }
 .label span { opacity: .85; font-size: 11px; }
@@ -16,3 +69,20 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #bcd6ea; fon
 .far .label b { font-size: 12px; }
 .label.low b::after { content: " ?"; color: #ffd27a; }
 @media (max-width: 600px) { #minimap { width: 120px; height: 180px; } #help { font-size: 10px; } }
+
+/* MICA Simulator overlay: solid backdrop while loading, transparent gradient once the campus is up */
+#title-screen.loading { background: radial-gradient(120% 90% at 30% 40%, #2a1714 0%, #120c0b 55%, #0b0909 100%); }
+/* title cascade (CSS so it plays before any script loads): waterfall entry, power4.out-like curve, overlapping */
+.ts-kicker { animation: rise .5s ease .15s both; }
+.ts-tri { animation: pop .5s cubic-bezier(.16,1,.3,1) .3s both; }
+.ts-title .w { animation: whip .2s cubic-bezier(.165,.84,.44,1) both; }
+.ts-title .w:nth-child(2) { --from: 80px; animation-duration: .22s; animation-delay: .35s; }
+.ts-title .w:nth-child(3) { animation-delay: .55s; }
+.ts-title .w:nth-child(4) { animation-delay: .69s; }
+.ts-title .w:nth-child(5) { animation-delay: .83s; }
+.ts-sub .w2 { --from: 40px; animation: whip .18s cubic-bezier(.165,.84,.44,1) 1.0s both; letter-spacing: .5em; }
+.ts-loader { animation: rise .5s ease 1.15s both; }
+.ts-foot { animation: rise .8s ease 1.4s both; }
+#title-screen:not(.loading) .ts-menu button { animation: rise .5s cubic-bezier(.16,1,.3,1) both; }
+#title-screen:not(.loading) .ts-menu button:nth-child(2) { animation-delay: .08s; }
+#title-screen:not(.loading) .ts-menu button.primary { animation: rise .5s cubic-bezier(.16,1,.3,1) both, pulse 1.8s ease-in-out .8s infinite; }
