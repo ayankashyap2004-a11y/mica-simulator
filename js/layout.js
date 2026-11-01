@@ -31,10 +31,11 @@ export const BUILDINGS = [
   { id: 'chinar', kind: 'hostel', name: 'Chinar', sub: 'Hostel No. 5', x: 860, y: 1344, w: 80, h: 60, rot: 0, court: [42, 28], floors: 2, gate: 's', stair: 'e', roof: 'grey', confidence: 'high', sched: 20 },
   { id: 'gulmohar', kind: 'hostel', name: 'Gulmohar', sub: 'Hostel No. 4', x: 860, y: 1419, w: 80, h: 60, rot: 0, court: [40, 28], floors: 2, gate: 'n', stair: 'w', roof: 'grey', confidence: 'high', sched: 19 },
   { id: 'silveroak', kind: 'hostel', name: 'Silver Oak', sub: 'Hostel No. 7', x: 1000, y: 1395, w: 98, h: 91, rot: 0, court: [46, 48], floors: 2, gate: 's', stair: 'w', roof: 'white', confidence: 'high', sched: 22 },
-  { id: 'ashoka', kind: 'ashoka', name: 'Ashoka', sub: 'Hostel No. 10 · G+4', x: 1078, y: 1495, w: 52, h: 165, rot: 0, floors: 5, confidence: 'high', sched: 25 },
+  // Ashoka nudged east and Palaash west so the path between them to the volleyball court is ~5.5 m wide (Ayan, 01-11)
+  { id: 'ashoka', kind: 'ashoka', name: 'Ashoka', sub: 'Hostel No. 10 · G+4', x: 1084, y: 1495, w: 52, h: 165, rot: 0, floors: 5, confidence: 'high', sched: 25 },
   // Kachnar (north), Palaash (middle), Parijat (south) ring the open badminton court; its fourth (open) side faces the Mess (Ayan, 01-11).
   { id: 'kachnar', kind: 'hostel', name: 'Kachnar', sub: 'Hostel No. 6', x: 918, y: 1503, w: 66, h: 62, rot: 0, court: [38, 36], floors: 2, gate: 's', stair: 'e', roof: 'white', confidence: 'high', sched: 21 },
-  { id: 'palaash', kind: 'hostel', name: 'Palaash', sub: 'Hostel No. 8', x: 1013, y: 1572, w: 69, h: 71, rot: 0, court: [42, 38], floors: 2, gate: 'w', stair: 'n', roof: 'white', confidence: 'high', sched: 23 },
+  { id: 'palaash', kind: 'hostel', name: 'Palaash', sub: 'Hostel No. 8', x: 1006, y: 1572, w: 64, h: 71, rot: 0, court: [38, 38], floors: 2, gate: 'w', stair: 'n', roof: 'white', confidence: 'high', sched: 23 },
   { id: 'parijat', kind: 'hostel', name: 'Parijat', sub: 'Hostel No. 9', x: 931, y: 1657, w: 93, h: 100, rot: 0, court: [48, 44], floors: 2, gate: 'n', stair: 'w', roof: 'white', skylight: true, confidence: 'high', sched: 24 },
   // Shishya Gramah — SOAC (School of Applied Communication / CCC) hostels: 6 prefab hutment clusters (schedule: 96 rooms).
   // Confirmed by Ayan's photos (Desktop/MICA 3D/WhatsApp Image 2026-11-01*): brick dado + white plaster, green sheet roofs
@@ -50,14 +51,17 @@ export const BUILDINGS = [
   // Mess: ground + 1st floor dining; 2nd floor = Students' Community Centre (TT, carrom) with open roof-terrace seating.
   { id: 'dining', kind: 'dining', name: 'Mess (Dining Hall)', sub: 'G + 1st: mess · 2nd: TT & carrom + roof terrace', x: 795, y: 1606, w: 89, h: 108, rot: -18, floors: 2, confidence: 'high', sched: 12 },
   { id: 'staffq', kind: 'simple', name: 'Staff Quarters', sub: 'Mess staff', x: 770, y: 1533, w: 35, h: 42, rot: -20, floors: 1, wall: 'plaster', roof: 'white', confidence: 'med', sched: 28 },
-  { id: 'canteen', kind: 'canteen', name: 'Chota Canteen', sub: 'Student Service Area · Doctor · ATM · Xerox', x: 907, y: 897, w: 52, h: 46, rot: 0, confidence: 'high', sched: 15 },
+  // Chhota: tiled-roof stall row on the east side of the clearing at ~(892-936, 960-1020), rotated to face west onto the
+  // plaza and the road that leads into it (Ayan, 01-11; two terracotta roofs visible on the satellite)
+  { id: 'canteen', kind: 'canteen', name: 'Chhota Canteen', sub: '24-hour canteen', x: 937, y: 988, w: 58, h: 30, rot: 90, confidence: 'high', sched: 15 },
+  { id: 'service', kind: 'simple', name: 'Student Service Area', sub: 'Doctor · ATM · Xerox', x: 895, y: 895, w: 36, h: 28, rot: -30, floors: 1, roof: 'grey', confidence: 'med', sched: 15 },
   { id: 'temple', kind: 'temple', name: 'Temple & Yoga Centre', sub: 'Shree Ganpati Temple', x: 725, y: 317, w: 46, h: 34, rot: 22, confidence: 'med', sched: 30 },
   { id: 'guest1', kind: 'simple', name: 'Guest House', x: 752, y: 698, w: 56, h: 34, rot: 35, floors: 2, roof: 'white', confidence: 'high', sched: 7 },
   { id: 'guest2', kind: 'simple', name: 'Guest House', x: 734, y: 624, w: 20, h: 50, rot: -40, floors: 2, roof: 'white', confidence: 'high', noLabel: true },
   { id: 'director', kind: 'bungalow', name: "Director's Bungalow", x: 862, y: 815, w: 92, h: 56, rot: 12, confidence: 'med', sched: 6 },
   { id: 'laundry', kind: 'simple', name: 'Laundromat', x: 1062, y: 1290, w: 18, h: 13, rot: 0, floors: 1, wall: 'plaster', roof: 'white', confidence: 'low', sched: 27 },
   { id: 'substation', kind: 'simple', name: 'Electric Sub-station & DG', x: 1125, y: 1320, w: 22, h: 26, rot: 0, floors: 1, wall: 'plaster', roof: 'white', confidence: 'low', sched: 29 },
-  { id: 'cafe', kind: 'kiosk', name: 'Café kiosk', x: 487, y: 1302, w: 14, h: 11, rot: 0, confidence: 'low' },
+  { id: 'cafe', kind: 'kiosk', name: 'MICafe', sub: 'Coffee & sandwiches', x: 487, y: 1302, w: 14, h: 11, rot: 0, confidence: 'low' },   // named on mica.ac.in Life@MICA; position from tour video
 ];
 
 export const OAT = { name: 'Open Air Theatre', sub: '300 seats', x: 614, y: 1296, r: 23, facing: 135, confidence: 'high' };
@@ -71,6 +75,8 @@ export const SURFACES = [
   { kind: 'brickpave', pts: [[820, 1135], [1068, 1135], [1068, 1330], [820, 1330]] },   // Shishya Gramah red-paver streets
   { kind: 'lawn', pts: [[919, 1194], [931, 1194], [931, 1272], [919, 1272]] },          // central lawn strip of the Shishya Gramah street
   { kind: 'paver', pts: [[162, 1156], [448, 1160], [448, 1226], [162, 1222]] },        // main parking
+  // Chhota: 24-hour canteen hangout in front of the stall row (mica.ac.in Life@MICA + "Chotta" vlog): pavers, lit trees, swings, charpoys, art wall
+  { kind: 'brickpave', name: 'Chhota', pts: [[880, 955], [923, 955], [923, 1022], [880, 1022]], label: true },
   { kind: 'brickpave', pts: [[880, 1450], [1050, 1445], [1050, 1700], [880, 1705]] },   // south hostel quads
   { kind: 'lawn', name: 'Idea Park lawn', pts: [[600, 1515], [690, 1520], [700, 1600], [610, 1600]], label: true },
   { kind: 'lawn', pts: [[815, 835], [925, 850], [915, 880], [810, 862]] },              // bungalow garden
@@ -94,9 +100,9 @@ export const PATHS = [
   { w: 3.5, pts: [[740, 1505], [775, 1555]] },
   { w: 3, pts: [[787, 1281], [801, 1287]] },
   { w: 4, pts: [[778, 1381], [860, 1381], [951, 1385]] },      // road Amaltas -> Silver Oak, between Chinar and Gulmohar
-  { w: 3, pts: [[1050, 1530], [1051, 1582], [1060, 1610], [1050, 1645]] },   // gap between Palaash and Ashoka: path from behind Palaash to the volleyball court
+  { w: 4, pts: [[1048, 1520], [1048, 1590], [1052, 1615], [1045, 1650]] },   // gap between Palaash and Ashoka: path from behind Palaash to the volleyball court
   { w: 4, pts: [[1081, 1348], [1112, 1420], [1118, 1620], [1080, 1715]] },
-  { w: 3.5, pts: [[905, 925], [906, 989]] },
+  { w: 3, pts: [[895, 912], [897, 955]] },                    // service area -> Chhota
   { w: 3, pts: [[565, 640], [620, 580], [660, 560]] },
   { w: 3, pts: [[560, 806], [520, 780], [520, 655]] },
   { w: 3, pts: [[680, 380], [700, 340]] },
@@ -109,7 +115,9 @@ export const GATE = { a: [145, 780], b: [140, 700], at: 0.6, width: 9 };
 export const SPAWN = { x: 182, y: 742, facing: 100 };
 
 export const PROPS = [
-  { kind: 'micaSign', x: 168, y: 720, rot: 100 },
+  { kind: 'micaSign', x: 126, y: 712, rot: 100 },          // outside the gate, roadside on the left as you drive in (registration-day drone shot)
+  { kind: 'chhotaPlaza', x: 901, y: 988 },
+  { kind: 'carShade', x: 300, y: 1166, len: 60, rot: 0 },    // steel shade over the main parking row (registration-day video)
   { kind: 'directionSign', x: 190, y: 800, rot: 90 },
   { kind: 'questionWall', x: 650, y: 1590, rot: 0 },
   { kind: 'benches', x: 590, y: 1250 },

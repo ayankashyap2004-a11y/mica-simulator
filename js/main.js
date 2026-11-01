@@ -94,7 +94,9 @@ const gateMid = lerp2(L.GATE.a, L.GATE.b, L.GATE.at);
 {
   const { a, b, at, width } = L.GATE, len = Math.hypot(b[0] - a[0], b[1] - a[1]), gw = width / M / 2 / len;
   for (const t of [at - gw, at + gw]) { const F = new Frame(...lerp2(a, b, t), 0); F.box(-0.7, -0.7, 0.7, 0.7, 0, 2.9, 'brick', 'concrete', { collide: true }); F.box(-0.85, -0.85, 0.85, 0.85, 2.9, 3.1, 'concrete'); }
-  const S = new Frame(...lerp2(a, b, at - gw - 0.05), 0); S.box(1.5, -1.6, 4.5, 1.6, 0, 2.8, 'plaster', 'roofWhite', { collide: true });  // security office
+  const S = new Frame(...lerp2(a, b, at - gw - 0.05), 0); S.box(1.5, -1.6, 4.5, 1.6, 0, 2.8, 'brick', 'roofWhite', { collide: true });  // brick security office with a rooftop tank (drone shot)
+  S.box(1.4, -1.7, 4.6, 1.7, 2.8, 3.0, 'concrete', 'concrete');
+  { const [tx, tz] = S.w(3.0, 0); const tk = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.1, 14), MAT.black); tk.position.set(tx, 3.55, tz); tk.castShadow = true; scene.add(tk); }
   openings(S, 4.5, -1.6, 4.5, 1.6, 0, 'tall', { margin: 0.5, dims: [1.6, 1.1, 1.0], chajja: true });
   const [lx, lz] = toW(...gateMid); extras.labels.push({ name: 'Main Gate', sub: 'Security office · Telav–Ghuma Rd', x: lx, y: 5, z: lz });
 }
@@ -353,6 +355,53 @@ for (const pr of L.PROPS) {
     const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = ry; scene.add(grp);
     for (const dx of [-3.6, 3.6]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.4, 0.12), MAT.white); post.position.set(dx, 1.2, 0); grp.add(post); }
     const bar = new THREE.Mesh(new THREE.BoxGeometry(7.3, 0.12, 0.12), MAT.white); bar.position.y = 2.4; grp.add(bar);
+  }
+  if (pr.kind === 'chhotaPlaza') {     // Chhota hangout: LED-wrapped trees on round brick planters, string lights, swings, charpoys, stools, art wall
+    const led = new THREE.MeshStandardMaterial({ color: 0xfff6e0, emissive: 0xfff0c4, emissiveIntensity: 1.4 });
+    const blue = new THREE.MeshStandardMaterial({ color: 0x2f6fb5, roughness: 0.8 }), redP = new THREE.MeshStandardMaterial({ color: 0xd8262a, roughness: 0.55 });
+    const wood = new THREE.MeshStandardMaterial({ color: 0x9a6a3c, roughness: 0.85 }), bark = new THREE.MeshStandardMaterial({ color: 0x5e4a3a, roughness: 1 });
+    const leaf = new THREE.MeshStandardMaterial({ color: 0x46782f, roughness: 0.95, flatShading: true }), rope = new THREE.MeshStandardMaterial({ color: 0xcdb68c });
+    const trees = [[-3.2, -8], [2.6, -3.8], [-3.2, 0.6], [2.6, 4.6], [-3.2, 8.4]].map(([dx, dz]) => [x + dx, z + dz]);   // staggered down the N-S plaza
+    for (const [tx, tz] of trees) {
+      addMesh(new THREE.CylinderGeometry(1.7, 1.8, 0.45, 20), MAT.orange, tx, 0.225, tz);
+      addMesh(new THREE.CylinderGeometry(0.22, 0.32, 5, 8), bark, tx, 2.5, tz);
+      const helix = new THREE.CatmullRomCurve3([...Array(40)].map((_, i) => new THREE.Vector3(Math.cos(i * 0.9) * 0.3, 0.5 + i * 0.09, Math.sin(i * 0.9) * 0.3)));
+      addMesh(new THREE.TubeGeometry(helix, 160, 0.035, 5), led, tx, 0, tz);
+      addMesh(new THREE.IcosahedronGeometry(3.6, 1), leaf, tx, 6.2, tz).scale.set(1, 0.7, 1);
+      colliders.push([[tx - 1.6, tz - 1.6], [tx + 1.6, tz - 1.6], [tx + 1.6, tz + 1.6], [tx - 1.6, tz + 1.6]]);
+    }
+    for (let i = 0; i < trees.length; i++) {          // string lights sagging between the trees
+      const [ax, az] = trees[i], [bx, bz] = trees[(i + 1) % trees.length];
+      const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(ax, 4.3, az), new THREE.Vector3((ax + bx) / 2, 3.5, (az + bz) / 2), new THREE.Vector3(bx, 4.3, bz));
+      addMesh(new THREE.TubeGeometry(curve, 30, 0.03, 4), led, 0, 0, 0).castShadow = false;
+    }
+    for (const [tx, tz] of [trees[0], trees[2]]) {    // swings hung from a low branch
+      addMesh(new THREE.CylinderGeometry(0.12, 0.15, 3, 6).rotateZ(Math.PI / 2), bark, tx + 1.6, 3.4, tz);
+      for (const dz of [-0.3, 0.3]) addMesh(new THREE.CylinderGeometry(0.015, 0.015, 2.8), rope, tx + 2.4, 2.0, tz + dz);
+      addMesh(new THREE.BoxGeometry(0.5, 0.06, 0.75), wood, tx + 2.4, 0.6, tz);
+    }
+    for (const [dx, dz, r] of [[0.6, -6.2, 1.5], [-0.4, 2.6, 1.4], [3.6, 7.6, 0.2]]) {   // blue charpoys
+      const g = new THREE.Group(); g.position.set(x + dx, 0, z + dz); g.rotation.y = r; scene.add(g);
+      const top = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.08, 0.9), blue); top.position.y = 0.45; top.castShadow = true; g.add(top);
+      for (const [lx, lz] of [[-0.9, -0.4], [0.9, -0.4], [0.9, 0.4], [-0.9, 0.4]]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.45, 0.07), blue); l.position.set(lx, 0.22, lz); g.add(l); }
+    }
+    for (let i = 0; i < 10; i++) addMesh(new THREE.CylinderGeometry(0.17, 0.14, 0.45, 10), redP, x + rr(-1.2, 4.8), 0.225, z + rr(-9, 9));          // plastic stools
+    for (let i = 0; i < 4; i++) addMesh(new THREE.BoxGeometry(1.0, 0.45, 0.5), wood, x + rr(-1, 4.5), 0.225, z + rr(-8, 8), rr(0, 3));          // crate benches
+    const t = signTexture((g, w, h) => {              // the Chhota art wall: painted tiles + Pac-Man "LEVEL UP"
+      g.fillStyle = '#f2efe8'; g.fillRect(0, 0, w, h);
+      const cs = ['#e2231a', '#1f6fd1', '#f4a300', '#2a9d4b', '#8b3fc7', '#ff7fae', '#20b2aa', '#333'];
+      for (let yy = 8; yy < h - 40; yy += 46) for (let xx = 8; xx < w; xx += 46) if (rand() < 0.8) { g.fillStyle = cs[(rand() * cs.length) | 0]; g.fillRect(xx, yy, 40, 40); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(xx + 6 + rand() * 20, yy + 6 + rand() * 20, 10, 10); }
+      g.fillStyle = '#f7c614'; g.beginPath(); g.moveTo(w * 0.55, h * 0.45); g.arc(w * 0.55, h * 0.45, h * 0.33, 0.6, Math.PI * 2 - 0.6); g.closePath(); g.fill();
+      g.fillStyle = '#f7c614'; g.font = `800 ${h * 0.16}px Archivo, system-ui`; g.textAlign = 'center'; g.fillText('LEVEL UP', w * 0.55, h * 0.95);
+    }, 1024, 200);
+    const [wx, wz] = toW(901, 957);                   // along the plaza's north edge, painted face looking south over Chhota
+    addMesh(new THREE.BoxGeometry(11, 2.4, 0.3), [MAT.white, MAT.white, MAT.white, MAT.white, new THREE.MeshStandardMaterial({ map: t }), MAT.white], wx, 1.2, wz);
+    colliders.push([[wx - 5.5, wz - 0.2], [wx + 5.5, wz - 0.2], [wx + 5.5, wz + 0.2], [wx - 5.5, wz + 0.2]]);
+  }
+  if (pr.kind === 'carShade') {        // steel car shade over the parking row
+    const steel = new THREE.MeshStandardMaterial({ color: 0x4a4f55, roughness: 0.5, metalness: 0.6 }), len = pr.len;
+    for (let dx = -len / 2; dx <= len / 2 + 0.01; dx += 6) { addMesh(new THREE.BoxGeometry(0.15, 2.9, 0.15), steel, x + dx, 1.45, z - 2.4); addMesh(new THREE.BoxGeometry(0.15, 2.5, 0.15), steel, x + dx, 1.25, z + 2.4); }
+    addMesh(new THREE.BoxGeometry(len + 1, 0.08, 5.6), steel, x, 2.75, z).rotation.x = -0.075;
   }
   if (pr.kind === 'streetlight') {     // dark grey pole with a bent arm and LED head (as in the Shishya Gramah photos)
     const grp = new THREE.Group(); grp.position.set(x, 0, z); grp.rotation.y = ry; scene.add(grp);

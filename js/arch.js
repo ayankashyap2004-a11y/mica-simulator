@@ -290,18 +290,23 @@ const builders = {
     parapetRect(F, x0, z0, x1, z1, H, 0.7); if (W > 6) tank(F, x0 + 1.2, z0 + 1.2, H);
     footprint(F, x0, z0, x1, z1); label(b, H + 3);
   },
+  // Chhota Canteen / Student Service Area: brick stall row (canteen, doctor, ATM, xerox) under a terracotta tiled roof
+  // with a deep front overhang on posts; "CHHOTA CANTEEN" board (registration-day video, mica.ac.in photo)
   canteen: b => {
-    const F = new Frame(b.x, b.y, b.rot || 0), W = b.w * M, D = b.h * M, H = 3.6, x0 = -W / 2, x1 = W / 2, z0 = -D / 2, z1 = D / 2, zm = z0 + D * 0.45;
-    F.box(x0, z0, x1, zm, 0, H, 'brick', 'roofGrey', { collide: true });
-    openings(F, x1, zm, x0, zm, 0, 'tall', { dims: [2.4, 1.3, 0.95], chajja: false });
-    F.box(x0 + 1, zm, x1 - 1, zm + 0.6, 0, 1.0, 'red', 'concrete');                 // counter
-    const s = signMesh('Coca-Cola', 1.6, 0.45, { bg: '#d41f26', font: 700 }); placeAt(F, s, 0, zm, 2.9, 0, 1);
-    // mono-pitch red sheet canopy on steel posts over the seating
-    const P = (x, z, y) => { const [a, c] = F.w(x, z); return new THREE.Vector3(a, y, c); };
-    for (let x = x0 + 0.5; x <= x1; x += 3.5) for (const z of [z1 - 0.4]) F.box(x - 0.08, z - 0.08, x + 0.08, z + 0.08, 0, 3.0, 'rail');
-    F.box(x0 - 0.4, zm, x1 + 0.4, z1 + 0.4, 3.1, 3.2, 'redSheet', 'redSheet', { bottom: 'white' });
-    for (let i = 0; i < 6; i++) { const tx = rr(x0 + 1.5, x1 - 1.5), tz = rr(zm + 1.8, z1 - 1.5); F.box(tx - 0.6, tz - 0.4, tx + 0.6, tz + 0.4, 0.72, 0.78, 'white'); F.box(tx - 0.05, tz - 0.05, tx + 0.05, tz + 0.05, 0, 0.72, 'rail'); }
-    footprint(F, x0, z0, x1, zm); label(b, 6);
+    const F = new Frame(b.x, b.y, b.rot || 0), W = b.w * M, D = b.h * M, H = 3.3, x0 = -W / 2, x1 = W / 2, z0 = -D / 2, zf = z0 + D * 0.55;
+    F.box(x0, z0, x1, zf, 0, H, 'brick', null, { collide: true });
+    const stalls = 4, sw = W / stalls;
+    for (let i = 0; i < stalls; i++) {                                   // a lit counter opening per stall
+      const cx = x0 + sw * (i + 0.5);
+      F.quadOn(x1, zf, x0, zf, 1 - (cx - x0) / W, sw * 0.62, 0.03, 0.95, 2.4, i === 2 ? 'glass' : 'door');
+      F.box(cx - sw * 0.33, zf, cx + sw * 0.33, zf + 0.55, 0, 0.95, i === 0 ? 'red' : 'concrete', 'concrete');
+      if (i) F.box(x0 + sw * i - 0.15, zf, x0 + sw * i + 0.15, zf + 0.1, 0, H, 'brick', 'concrete');
+    }
+    const zr = zf + 2.6;                                                 // tiled roof over stalls + front verandah
+    for (let x = x0 + 0.4; x <= x1 - 0.3; x += W / 5) F.box(x - 0.1, zr - 0.1, x + 0.1, zr + 0.1, 0, 2.7, 'timber');
+    gableRoof(F, x0, z0, x1, zr, H, 1.4, 0.5, 'tile', 'brick');
+    const s = signMesh('CHHOTA CANTEEN', 3.2, 0.5, { bg: '#1f6f8b' }); placeAt(F, s, x0 + W * 0.28, zf + 0.12, 2.7, 0, 1);
+    footprint(F, x0, z0, x1, zf); label(b, 7);
   },
   temple: b => {
     const F = new Frame(b.x, b.y, b.rot || 0), W = b.w * M, D = b.h * M, x0 = -W / 2, x1 = W / 2, z0 = -D / 2, z1 = D / 2;

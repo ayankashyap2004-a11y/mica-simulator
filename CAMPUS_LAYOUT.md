@@ -39,6 +39,35 @@
 | Temple & Yoga Centre (red-roof hut by the canal) | ground | medium |
 | Guest House, Director's Bungalow | G+1 / ground | high / medium |
 
+## Cross-check, 1 Nov
+- **Google Earth (April 2026 imagery):** confirms the south cluster.
+  - Mastipur Palaash sits beside Ashoka's south end.
+  - The teal court lies between Kachnar and Parijat, and Parijat is the pyramid quad.
+  - The bare patch south-east of Palaash is the volleyball court.
+  - The real gap between Palaash and Ashoka is about 3.75 m. In the game it's widened to about 5.5 m so the walk is easy.
+- **Google Maps satellite:** the Shishya Gramah rows and the Healing Circle strip match. Its user-added "Hostel Parijat" pin sits on the Chinar/Gulmohar compound; Ayan's on-campus identification takes priority.
+- **mica.ac.in Life@MICA:**
+  - Chhota is the 24-hour canteen, with a yearly-painted art wall and rope swings.
+  - MICafe is a second hangout; the kiosk near the seminar halls now carries that name.
+  - There's graffiti on the hostel walls.
+  - A green badminton court sits inside a hostel courtyard.
+  - The seminar halls are tiered horseshoe classrooms inside.
+- **/watch videos:**
+  - *Chotta vlog:* Chhota is a plaza with LED-wrapped trees on round brick planters, string lights, swings, blue charpoys, red stools and the Pac-Man "LEVEL UP" art wall. All of this is now modelled.
+  - *Registration-day video:*
+    - The MICA board stands **outside** the gate, roadside on the left (moved there).
+    - The security cabin is brick with a water tank (changed).
+    - Chhota Canteen is a stall row under a tiled roof (rebuilt).
+    - The parking lot has steel car shades (added).
+  - *Amaltas hostel tour:* matches the courtyard model (concrete corridors, cantilevered stairs, kite murals, laundry).
+  - *Sports-day video:* football, basketball and the volleyball court by the hostels all match.
+
+- **Chhota realigned (Ayan, 1 Nov):**
+  - The tiled stall row now sits on the two terracotta roofs at about (920–950, 960–1020), rotated 90° to face **west**.
+  - The plaza is the bare clearing in front of it, at about (880–923, 955–1022).
+  - The road from the Main Academic Block now runs into the plaza's west edge.
+  - The grey building to the north is the **Student Service Area** (doctor, ATM, xerox; about 89 m², matching the schedule).
+
 ## Still open
 - **Satellite cross-check (1 Nov):** `research/overlay_core.jpg` and `research/overlay_north.jpg` draw every footprint over the satellite image. All of them sit on real roofs.
 - **Gym and volleyball court** (placed from Ayan's directions, 1 Nov):
